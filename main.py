@@ -15,7 +15,8 @@ warnings.filterwarnings('ignore')
 # Main function starts here ->
 def main(): # TK, LB
     print("Program has started...")
-    pre_processing()
+    pre_processing() # pre process the data
+    linear_regression() # 
     print("Program has finished...")
     return
 
@@ -26,7 +27,6 @@ def pre_processing(): # LB
     count_2019 = pd.read_csv('2019_cycle_counter.csv')
     count_2020 = pd.read_csv('2020_cycle_counter.csv')
     count_2021 = pd.read_csv('2021_cycle_counter.csv')
-    # data = wea.values.tolist()
 
     # load in the weather data and discard the first 23 rows since the data starts at index 23
     wea_date = wea.iloc[23:,0] # load 1st column, date
@@ -38,6 +38,11 @@ def pre_processing(): # LB
     wea_sun_duration = wea.iloc[23:,17] # load 18th column, sun duration
     wea_visibility = wea.iloc[23:,18] # load 19th column, visibility
     wea_cloud_amount = wea.iloc[23:,20] # load 21st column, cloud amount
+    frame = { "Date & Time": wea_date, "Rain": wea_rain, "Temperature": wea_temperature, "Humidity": wea_humidity, 
+        "Wind Speed": wea_wind_speed, "Wind Direction": wea_wind_direction, "Sun Duration": wea_sun_duration, 
+        "Visibility": wea_visibility, "Cloud Amount": wea_cloud_amount } # combine columns into a frame
+    result = pd.DataFrame(frame) # add frame to dataframe
+    result.to_csv('weather_result.csv') # add to file
 
     # load in cycle count data for 2019
     count_date_2019 = count_2019.iloc[:,0] # load 1st column, date
@@ -89,14 +94,32 @@ def pre_processing(): # LB
     column_list_2021.remove("Richmond Street Cyclists 2  Cyclist OUT") # remove OUT as already counted
     total_count_2021 = count_2021[column_list_2021].sum(axis=1) # sum up total of totals
     
-    count_date_total = count_date_2019.append(count_date_2020.append(count_date_2021))
-    total_count = total_count_2019.append(total_count_2020.append(total_count_2021))
-    frame = { 'Date & Time': count_date_total, 'Total Count': total_count }
-    result = pd.DataFrame(frame)
-    result.to_csv('result.csv')
-    
+    count_date_total = count_date_2019.append(count_date_2020.append(count_date_2021)) # combine 2019, 2020 and 2021 dates into one list
+    total_count = total_count_2019.append(total_count_2020.append(total_count_2021)) # combine total count from 2019, 2020 and 2021
+    frame = { 'Date & Time': count_date_total, 'Total Count': total_count } # create a frame with the date and total count
+    result = pd.DataFrame(frame) # create a dataframe with our desired frame
+    result.to_csv('count_result.csv') # write dataframe to csv file    
     print("Finished preprocessing data...")
 
+def linear_regression(): # LB
+    print("Starting linear regression...")
+
+    print("Finished linear regression...")
+
+def lasso_regression():
+    print("Starting lasso regression...")
+
+    print("Finished lasso regression...")
+
+def ridge_regression():
+    print("Starting ridge regression...")
+
+    print("Finished ridge regression...")
+
+def knn():
+    print("Starting knn...")
+
+    print("Finished knn...")
 
 if __name__ == "__main__":
     main()
