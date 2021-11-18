@@ -14,10 +14,10 @@ warnings.filterwarnings('ignore')
 
 # Main function starts here ->
 def main(): # TK, LB
-    print("Program has started...")
+    print('Program has started...')
     pre_processing() # pre process the data
     linear_regression() # 
-    print("Program has finished...")
+    print('Program has finished...')
     return
 
 # Preprocessing function starts here
@@ -38,9 +38,9 @@ def pre_processing(): # LB
     wea_sun_duration = wea.iloc[23:,17] # load 18th column, sun duration
     wea_visibility = wea.iloc[23:,18] # load 19th column, visibility
     wea_cloud_amount = wea.iloc[23:,20] # load 21st column, cloud amount
-    frame = { "Date & Time": wea_date, "Rain": wea_rain, "Temperature": wea_temperature, "Humidity": wea_humidity, 
-        "Wind Speed": wea_wind_speed, "Wind Direction": wea_wind_direction, "Sun Duration": wea_sun_duration, 
-        "Visibility": wea_visibility, "Cloud Amount": wea_cloud_amount } # combine columns into a frame
+    frame = { 'Date & Time': wea_date, 'Rain': wea_rain, 'Temperature': wea_temperature, 'Humidity': wea_humidity, 
+        'Wind Speed': wea_wind_speed, 'Wind Direction': wea_wind_direction, 'Sun Duration': wea_sun_duration, 
+        'Visibility': wea_visibility, 'Cloud Amount': wea_cloud_amount } # combine columns into a frame
     result = pd.DataFrame(frame) # add frame to dataframe
     result.to_csv('weather_result.csv') # add to file
 
@@ -61,12 +61,12 @@ def pre_processing(): # LB
     count_nsrn_2020 = count_2020.iloc[:,10] # load 11th column, North Strand Rd N/B (nsrn) location
     count_nsrs_2020 = count_2020.iloc[:,11] # load 12th column, North Strand Rd S/B (nsrs) location
     column_list_2020 = list(count_2020) # get all the columns from the 2020 dataset
-    column_list_2020.remove("Charleville Mall Cyclist IN") # remove IN as already counted
-    column_list_2020.remove("Charleville Mall Cyclist OUT") # remove OUT as already counted
-    column_list_2020.remove("Grove Road Totem OUT") # remove OUT as already counted
-    column_list_2020.remove("Grove Road Totem IN") # remove IN as already counted
-    column_list_2020.remove("Guild Street bikes IN-Towards Quays") # remove IN as already counted
-    column_list_2020.remove("Guild Street bikes OUT-Towards Drumcondra") # remove OUT as already counted
+    column_list_2020.remove('Charleville Mall Cyclist IN') # remove IN as already counted
+    column_list_2020.remove('Charleville Mall Cyclist OUT') # remove OUT as already counted
+    column_list_2020.remove('Grove Road Totem OUT') # remove OUT as already counted
+    column_list_2020.remove('Grove Road Totem IN') # remove IN as already counted
+    column_list_2020.remove('Guild Street bikes IN-Towards Quays') # remove IN as already counted
+    column_list_2020.remove('Guild Street bikes OUT-Towards Drumcondra') # remove OUT as already counted
     total_count_2020 = count_2020[column_list_2020].sum(axis=1) # sum up total of totals
 
     # load in cycle count data for 2021
@@ -80,18 +80,18 @@ def pre_processing(): # LB
     count_r1_2021 = count_2021.iloc[:,15] # load 16th column, Richmond Street 1 (r1) location
     count_r2_2021 = count_2021.iloc[:,18] # load 19th column, Richmond Street 2 (r2) location
     column_list_2021 = list(count_2021) # all the columns from the 2021 dataset
-    column_list_2021.remove("Charleville Mall Cyclist IN") # remove IN as already counted
-    column_list_2021.remove("Charleville Mall Cyclist OUT") # remove OUT as already counted
-    column_list_2021.remove("Drumcondra Cyclists 1 Cyclist IN") # remove IN as already counted
-    column_list_2021.remove("Drumcondra Cyclists 1 Cyclist OUT") # remove OUT as already counted
-    column_list_2021.remove("Drumcondra Cyclists 2 Cyclist IN") # remove IN as already counted
-    column_list_2021.remove("Drumcondra Cyclists 2 Cyclist OUT") # remove OUT as already counted
-    column_list_2021.remove("Grove Road Totem OUT") # remove OUT as already counted
-    column_list_2021.remove("Grove Road Totem IN") # remove IN as already counted
-    column_list_2021.remove("Richmond Street Cyclists 1 Cyclist IN") # remove IN as already counted
-    column_list_2021.remove("Richmond Street Cyclists 1 Cyclist OUT") # remove OUT as already counted
-    column_list_2021.remove("Richmond Street Cyclists 2  Cyclist IN") # remove IN as already counted
-    column_list_2021.remove("Richmond Street Cyclists 2  Cyclist OUT") # remove OUT as already counted
+    column_list_2021.remove('Charleville Mall Cyclist IN') # remove IN as already counted
+    column_list_2021.remove('Charleville Mall Cyclist OUT') # remove OUT as already counted
+    column_list_2021.remove('Drumcondra Cyclists 1 Cyclist IN') # remove IN as already counted
+    column_list_2021.remove('Drumcondra Cyclists 1 Cyclist OUT') # remove OUT as already counted
+    column_list_2021.remove('Drumcondra Cyclists 2 Cyclist IN') # remove IN as already counted
+    column_list_2021.remove('Drumcondra Cyclists 2 Cyclist OUT') # remove OUT as already counted
+    column_list_2021.remove('Grove Road Totem OUT') # remove OUT as already counted
+    column_list_2021.remove('Grove Road Totem IN') # remove IN as already counted
+    column_list_2021.remove('Richmond Street Cyclists 1 Cyclist IN') # remove IN as already counted
+    column_list_2021.remove('Richmond Street Cyclists 1 Cyclist OUT') # remove OUT as already counted
+    column_list_2021.remove('Richmond Street Cyclists 2  Cyclist IN') # remove IN as already counted
+    column_list_2021.remove('Richmond Street Cyclists 2  Cyclist OUT') # remove OUT as already counted
     total_count_2021 = count_2021[column_list_2021].sum(axis=1) # sum up total of totals
     
     count_date_total = count_date_2019.append(count_date_2020.append(count_date_2021)) # combine 2019, 2020 and 2021 dates into one list
@@ -99,27 +99,27 @@ def pre_processing(): # LB
     frame = { 'Date & Time': count_date_total, 'Total Count': total_count } # create a frame with the date and total count
     result = pd.DataFrame(frame) # create a dataframe with our desired frame
     result.to_csv('count_result.csv') # write dataframe to csv file    
-    print("Finished preprocessing data...")
+    print('Finished preprocessing data...')
 
 def linear_regression(): # LB
-    print("Starting linear regression...")
+    print('Starting linear regression...')
 
-    print("Finished linear regression...")
+    print('Finished linear regression...')
 
 def lasso_regression():
-    print("Starting lasso regression...")
+    print('Starting lasso regression...')
 
-    print("Finished lasso regression...")
+    print('Finished lasso regression...')
 
 def ridge_regression():
-    print("Starting ridge regression...")
+    print('Starting ridge regression...')
 
-    print("Finished ridge regression...")
+    print('Finished ridge regression...')
 
 def knn():
-    print("Starting knn...")
+    print('Starting knn...')
 
-    print("Finished knn...")
+    print('Finished knn...')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
