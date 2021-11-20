@@ -11,6 +11,7 @@ from sklearn.metrics import roc_curve
 from sklearn.model_selection import cross_val_score, train_test_split
 import warnings
 warnings.filterwarnings('ignore')
+import re
 
 # Main function starts here ->
 def main(): # TK, LB
@@ -28,16 +29,17 @@ def pre_processing(): # LB
     count_2020 = pd.read_csv('2020_cycle_counter.csv')
     count_2021 = pd.read_csv('2021_cycle_counter.csv')
 
-    # load in the weather data and discard the first 23 rows since the data starts at index 23
-    wea_date = wea.iloc[23:,0] # load 1st column, date
-    wea_rain = wea.iloc[23:,2] # load 3rd column, precipitation amount (rain)
-    wea_temperature = wea.iloc[23:,4] # load 5th column, temperature
-    wea_humidity = wea.iloc[23:,9] # load 10th column, relative humidity
-    wea_wind_speed = wea.iloc[23:,12] # load 13th column, mean wind speed
-    wea_wind_direction = wea.iloc[23:,14] # load 15th column, wind direction
-    wea_sun_duration = wea.iloc[23:,17] # load 18th column, sun duration
-    wea_visibility = wea.iloc[23:,18] # load 19th column, visibility
-    wea_cloud_amount = wea.iloc[23:,20] # load 21st column, cloud amount
+    # load in the weather data and discard all the rows corresponding to dates before january 1st 2019
+    relevant_index = 23 + 245448
+    wea_date = wea.iloc[relevant_index:,0] # load 1st column, date
+    wea_rain = wea.iloc[relevant_index:,2] # load 3rd column, precipitation amount (rain)
+    wea_temperature = wea.iloc[relevant_index:,4] # load 5th column, temperature
+    wea_humidity = wea.iloc[relevant_index:,9] # load 10th column, relative humidity
+    wea_wind_speed = wea.iloc[relevant_index:,12] # load 13th column, mean wind speed
+    wea_wind_direction = wea.iloc[relevant_index:,14] # load 15th column, wind direction
+    wea_sun_duration = wea.iloc[relevant_index:,17] # load 18th column, sun duration
+    wea_visibility = wea.iloc[relevant_index:,18] # load 19th column, visibility
+    wea_cloud_amount = wea.iloc[relevant_index:,20] # load 21st column, cloud amount
     frame = { 'Date & Time': wea_date, 'Rain': wea_rain, 'Temperature': wea_temperature, 'Humidity': wea_humidity, 
         'Wind Speed': wea_wind_speed, 'Wind Direction': wea_wind_direction, 'Sun Duration': wea_sun_duration, 
         'Visibility': wea_visibility, 'Cloud Amount': wea_cloud_amount } # combine columns into a frame
@@ -94,16 +96,23 @@ def pre_processing(): # LB
     column_list_2021.remove('Richmond Street Cyclists 2  Cyclist OUT') # remove OUT as already counted
     total_count_2021 = count_2021[column_list_2021].sum(axis=1) # sum up total of totals
     
+    total_count_2021 = total_count_2021[:-503] # remove the last 503 rows since we only have weather data until 1/10/2021 00:00
+    count_date_2021 = count_date_2021[:-503] # remove the last 503 rows since we only have weather data until 1/10/2021 00:00
+
     count_date_total = count_date_2019.append(count_date_2020.append(count_date_2021)) # combine 2019, 2020 and 2021 dates into one list
     total_count = total_count_2019.append(total_count_2020.append(total_count_2021)) # combine total count from 2019, 2020 and 2021
     frame = { 'Date & Time': count_date_total, 'Total Count': total_count } # create a frame with the date and total count
     result = pd.DataFrame(frame) # create a dataframe with our desired frame
+    result['Date & Time'] = result['Date & Time'].str.replace('-','/') # replace the dashes with forward slashes so the two formats are the same
+    result['Date & Time'] = result['Date & Time'].str.replace(r'(\d{2}):(\d{2}):(\d{2})', r'\1:\2', regex=True) # delete the :ss since they are all 00 seconds which doesn't provide more information
     result.to_csv('count_result.csv') # write dataframe to csv file    
     print('Finished preprocessing data...')
 
 def linear_regression(): # LB
     print('Starting linear regression...')
 
+    # Use cross validation to select hyperparameters
+    # Compare performance against baseline predictors
     print('Finished linear regression...')
 
 def lasso_regression():
