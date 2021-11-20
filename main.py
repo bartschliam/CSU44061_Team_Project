@@ -31,20 +31,30 @@ def pre_processing(): # LB
 
     # load in the weather data and discard all the rows corresponding to dates before january 1st 2019
     relevant_index = 23 + 245448
+    daylight_saving_time_index = 2137
     wea_date = wea.iloc[relevant_index:,0] # load 1st column, date
+    wea_date = wea_date.drop(wea_date.index[daylight_saving_time_index]) # drop daylight saving time error
     wea_rain = wea.iloc[relevant_index:,2] # load 3rd column, precipitation amount (rain)
+    wea_rain = wea_rain.drop(wea_rain.index[daylight_saving_time_index]) # drop daylight saving time error
     wea_temperature = wea.iloc[relevant_index:,4] # load 5th column, temperature
+    wea_temperature = wea_temperature.drop(wea_temperature.index[daylight_saving_time_index]) # drop daylight saving time error
     wea_humidity = wea.iloc[relevant_index:,9] # load 10th column, relative humidity
+    wea_humidity = wea_humidity.drop(wea_humidity.index[daylight_saving_time_index]) # drop daylight saving time error
     wea_wind_speed = wea.iloc[relevant_index:,12] # load 13th column, mean wind speed
+    wea_wind_speed = wea_wind_speed.drop(wea_wind_speed.index[daylight_saving_time_index]) # drop daylight saving time error
     wea_wind_direction = wea.iloc[relevant_index:,14] # load 15th column, wind direction
+    wea_wind_direction = wea_wind_direction.drop(wea_wind_direction.index[daylight_saving_time_index]) # drop daylight saving time error
     wea_sun_duration = wea.iloc[relevant_index:,17] # load 18th column, sun duration
+    wea_sun_duration = wea_sun_duration.drop(wea_sun_duration.index[daylight_saving_time_index]) # drop daylight saving time error
     wea_visibility = wea.iloc[relevant_index:,18] # load 19th column, visibility
+    wea_visibility = wea_visibility.drop(wea_visibility.index[daylight_saving_time_index]) # drop daylight saving time error
     wea_cloud_amount = wea.iloc[relevant_index:,20] # load 21st column, cloud amount
+    wea_cloud_amount = wea_cloud_amount.drop(wea_cloud_amount.index[daylight_saving_time_index]) # drop daylight saving time error
     frame = { 'Date & Time': wea_date, 'Rain': wea_rain, 'Temperature': wea_temperature, 'Humidity': wea_humidity, 
         'Wind Speed': wea_wind_speed, 'Wind Direction': wea_wind_direction, 'Sun Duration': wea_sun_duration, 
         'Visibility': wea_visibility, 'Cloud Amount': wea_cloud_amount } # combine columns into a frame
     result = pd.DataFrame(frame) # add frame to dataframe
-    result.to_csv('weather_result.csv') # add to file
+    result.to_csv('weather_result.csv', index=False) # add to file
 
     # load in cycle count data for 2019
     count_date_2019 = count_2019.iloc[:,0] # load 1st column, date
@@ -105,7 +115,7 @@ def pre_processing(): # LB
     result = pd.DataFrame(frame) # create a dataframe with our desired frame
     result['Date & Time'] = result['Date & Time'].str.replace('-','/') # replace the dashes with forward slashes so the two formats are the same
     result['Date & Time'] = result['Date & Time'].str.replace(r'(\d{2}):(\d{2}):(\d{2})', r'\1:\2', regex=True) # delete the :ss since they are all 00 seconds which doesn't provide more information
-    result.to_csv('count_result.csv') # write dataframe to csv file    
+    result.to_csv('count_result.csv', index=False) # write dataframe to csv file    
     print('Finished preprocessing data...')
 
 def linear_regression(): # LB
