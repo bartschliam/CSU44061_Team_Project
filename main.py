@@ -12,13 +12,17 @@ from sklearn.metrics import roc_curve
 from sklearn.model_selection import cross_val_score, train_test_split
 import warnings
 warnings.filterwarnings('ignore')
-import itertools
+import seaborn as seabornInstance 
+from sklearn import metrics
+
 
 # Main function starts here ->
 def main(): # TK, LB
     print('Program has started...')
+    # Use cross validation to select hyperparameters
+    # Compare performance against baseline predictors
     pre_processing() # pre process the data
-    linear_regression() # 
+    linear_regression() # linear regression
     print('Program has finished...')
     return
 
@@ -123,17 +127,18 @@ def linear_regression(): # LB
     y = result.iloc[:,9] # read the count (output)
     X = result.iloc[:,0:9] # read in all the other columns (inputs)
     X['Date & Time'] = X['Date & Time'].str[11:-3] # truncate date and time to only the hours
-    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size = 0.25)
-    model = LinearRegression()
-    model.fit(x_train, y_train)
-    predictions = model.predict(x_test)
-    #plt.scatter(X['Date & Time'], y)
-    #plt.scatter(x_train['Date & Time'], y_train)
-    #plt.show()
 
-
-    # Use cross validation to select hyperparameters
-    # Compare performance against baseline predictors
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size = 0.2) # split data into training and test data
+    model = LinearRegression() # initialize linear regression model
+    model.fit(x_train, y_train) # fit the training data
+    y_pred = model.predict(x_test) # predict using test data
+    coeff = pd.DataFrame(model.coef_, X.columns, columns=['Coeff']) # save coefficients of each input feature
+    df = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred}) # create data frame with predictions vs actual outputs
+    '''
+    print('Mean Absolute Error:', metrics.mean_absolute_error(y_test, y_pred)) # calculate MAE
+    print('Mean Squared Error:', metrics.mean_squared_error(y_test, y_pred)) # calculate MSE
+    print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y_test, y_pred))) # calculate RMSE
+    '''
     print('Finished linear regression...')
 
 def lasso_regression():
