@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.dummy import DummyClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -11,7 +12,7 @@ from sklearn.metrics import roc_curve
 from sklearn.model_selection import cross_val_score, train_test_split
 import warnings
 warnings.filterwarnings('ignore')
-import re
+import itertools
 
 # Main function starts here ->
 def main(): # TK, LB
@@ -50,11 +51,6 @@ def pre_processing(): # LB
     wea_visibility = wea_visibility.drop(wea_visibility.index[daylight_saving_time_index]) # drop daylight saving time error
     wea_cloud_amount = wea.iloc[relevant_index:,20] # load 21st column, cloud amount
     wea_cloud_amount = wea_cloud_amount.drop(wea_cloud_amount.index[daylight_saving_time_index]) # drop daylight saving time error
-    frame = { 'Date & Time': wea_date, 'Rain': wea_rain, 'Temperature': wea_temperature, 'Humidity': wea_humidity, 
-        'Wind Speed': wea_wind_speed, 'Wind Direction': wea_wind_direction, 'Sun Duration': wea_sun_duration, 
-        'Visibility': wea_visibility, 'Cloud Amount': wea_cloud_amount } # combine columns into a frame
-    result = pd.DataFrame(frame) # add frame to dataframe
-    result.to_csv('weather_result.csv', index=False) # add to file
 
     # load in cycle count data for 2019
     count_date_2019 = count_2019.iloc[:,0] # load 1st column, date
@@ -111,15 +107,30 @@ def pre_processing(): # LB
 
     count_date_total = count_date_2019.append(count_date_2020.append(count_date_2021)) # combine 2019, 2020 and 2021 dates into one list
     total_count = total_count_2019.append(total_count_2020.append(total_count_2021)) # combine total count from 2019, 2020 and 2021
-    frame = { 'Date & Time': count_date_total, 'Total Count': total_count } # create a frame with the date and total count
-    result = pd.DataFrame(frame) # create a dataframe with our desired frame
+    
+    frame = { 'Date & Time': wea_date, 'Rain': wea_rain, 'Temperature': wea_temperature, 'Humidity': wea_humidity, 
+        'Wind Speed': wea_wind_speed, 'Wind Direction': wea_wind_direction, 'Sun Duration': wea_sun_duration, 
+        'Visibility': wea_visibility, 'Cloud Amount': wea_cloud_amount, 'Total Count': total_count.tolist() } # combine columns into a frame
+    result = pd.DataFrame(frame) # add frame to dataframe
     result['Date & Time'] = result['Date & Time'].str.replace('-','/') # replace the dashes with forward slashes so the two formats are the same
     result['Date & Time'] = result['Date & Time'].str.replace(r'(\d{2}):(\d{2}):(\d{2})', r'\1:\2', regex=True) # delete the :ss since they are all 00 seconds which doesn't provide more information
-    result.to_csv('count_result.csv', index=False) # write dataframe to csv file    
+    result.to_csv('results.csv', index=False) # write dataframe to csv file    
     print('Finished preprocessing data...')
 
 def linear_regression(): # LB
     print('Starting linear regression...')
+    result = pd.read_csv('results.csv') # read preprocessed data
+    y = result.iloc[:,9] # read the count (output)
+    X = result.iloc[:,0:9] # read in all the other columns (inputs)
+    X['Date & Time'] = X['Date & Time'].str[11:-3] # truncate date and time to only the hours
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size = 0.25)
+    model = LinearRegression()
+    model.fit(x_train, y_train)
+    predictions = model.predict(x_test)
+    #plt.scatter(X['Date & Time'], y)
+    #plt.scatter(x_train['Date & Time'], y_train)
+    #plt.show()
+
 
     # Use cross validation to select hyperparameters
     # Compare performance against baseline predictors
