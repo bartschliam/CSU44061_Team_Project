@@ -22,9 +22,7 @@ from itertools import repeat
 def main(): # TK, LB
     print('Program has started...')
     pre_processing() # pre process the data
-    linear_knn_regression() # linear regression and knn regression
-    lasso_regression() # lasso regression
-    ridge_regression() # ridge regression
+    methods(1, 0, 0, 1, 1, 1) # linear, lasso, ridge and knn regression, dummy and compare
     print('Program has finished...')
     return
 
@@ -123,8 +121,8 @@ def pre_processing(): # LB
     result.to_csv('results.csv', index=False) # write dataframe to csv file 
     print('Finished preprocessing data...')
 
-def linear_knn_regression(): # LB
-    print('Starting linear and knn regression...')
+def methods(li, la, ri, kn, du, co): # LB
+    print('Starting methods...')
     # ----------------------------------------------------------------------------#
     ############################ Initialization ###################################
     # ----------------------------------------------------------------------------#
@@ -152,79 +150,92 @@ def linear_knn_regression(): # LB
     # ----------------------------------------------------------------------------#
     ############################ Linear Regression ################################
     # ----------------------------------------------------------------------------#
-    for train, test in kf.split(x_train): # perform 5-fold cross validation on training data
-        lr_model.fit(x_train.iloc[train], y_train.iloc[train]) # fit the training data
-        y_pred_lr = lr_model.predict(x_train.iloc[test]) # predict using test data
-        temp.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_lr)) # add error to temp array
-    lr_mean.extend(repeat(np.mean(temp), len(k_values))) # extend for straight line for linear regression
-    lr_std.extend(repeat(np.std(temp), len(k_values))) # extend for straight line for linear regression
-    coeff = pd.DataFrame(lr_model.coef_, X.columns, columns=['Coeff']) # save coefficients of each input feature
+    if(li):
+        print('Starting linear regression...')
+        for train, test in kf.split(x_train): # perform 5-fold cross validation on training data
+            lr_model.fit(x_train.iloc[train], y_train.iloc[train]) # fit the training data
+            y_pred_lr = lr_model.predict(x_train.iloc[test]) # predict using test data
+            temp.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_lr)) # add error to temp array
+        lr_mean.extend(repeat(np.mean(temp), len(k_values))) # extend for straight line for linear regression
+        lr_std.extend(repeat(np.std(temp), len(k_values))) # extend for straight line for linear regression
+        coeff = pd.DataFrame(lr_model.coef_, X.columns, columns=['Coeff']) # save coefficients of each input feature
+        print('Finished linear regression...')
     
+    # ----------------------------------------------------------------------------#
+    ############################ Lasso Regression ################################
+    # ----------------------------------------------------------------------------#
+    if(la):
+        print('Starting lasso regression...')
+        # Use cross validation to select hyperparameters
+        # Compare performance against baseline predictors
+        print('Finished lasso regression...')
+
+    # ----------------------------------------------------------------------------#
+    ############################ Ridge Regression ################################
+    # ----------------------------------------------------------------------------#
+    if(ri):
+        print('Starting ridge regression...')
+        # Use cross validation to select hyperparameters
+        # Compare performance against baseline predictors
+        print('Finished ridge regression...')
+
 
     # ----------------------------------------------------------------------------#
     ############################ KNN Regression ###################################
     # ----------------------------------------------------------------------------#    
-   
-    for k in k_values: # for each k value
-        temp = [] # temp array to store errors
-        knn_model = neighbors.KNeighborsRegressor(n_neighbors=k) # init model
-        for train, test in kf.split(x_train): # perform 5-fold cross validation on training data
-            knn_model.fit(x_train.iloc[train], y_train.iloc[train]) # fit model on training data
-            y_pred_knn = knn_model.predict(x_train.iloc[test]) # predict on test data
-            temp.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_knn)) # add error to temp array
-        knn_mean.append(np.mean(temp)) # add mean of estimates
-        knn_std.append(np.std(temp)) # add std of estimates
-    
+    if(kn):
+        print('Starting knn regression...')
+        for k in k_values: # for each k value
+            temp = [] # temp array to store errors
+            knn_model = neighbors.KNeighborsRegressor(n_neighbors=k) # init model
+            for train, test in kf.split(x_train): # perform 5-fold cross validation on training data
+                knn_model.fit(x_train.iloc[train], y_train.iloc[train]) # fit model on training data
+                y_pred_knn = knn_model.predict(x_train.iloc[test]) # predict on test data
+                temp.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_knn)) # add error to temp array
+            knn_mean.append(np.mean(temp)) # add mean of estimates
+            knn_std.append(np.std(temp)) # add std of estimates
+        print('Finished knn regression...')
 
     # ----------------------------------------------------------------------------#
     ############################ Dummy Regressors #################################
     # ----------------------------------------------------------------------------#
-    dummy_mean.fit(x_train, y_train) # fit model
-    dummy_median.fit(x_train, y_train) # fit model
+    if(du):
+        dummy_mean.fit(x_train, y_train) # fit model
+        dummy_median.fit(x_train, y_train) # fit model
 
-    y_pred_mean = dummy_mean.predict(x_test) # make prediction
-    y_pred_median = dummy_median.predict(x_test) # make prediction
+        y_pred_mean = dummy_mean.predict(x_test) # make prediction
+        y_pred_median = dummy_median.predict(x_test) # make prediction
 
-    mean_mean_rmse = np.mean(metrics.mean_squared_error(y_pred_mean, y_test)) # mean rmse dummy mean
-    median_mean_rmse = np.mean(metrics.mean_squared_error(y_pred_median, y_test)) # mean rmse dummy median
-    
-    mean_std_rmse = np.std(metrics.mean_squared_error(y_pred_mean, y_test)) # std rmse dummy mean
-    median_std_rmse = np.std(metrics.mean_squared_error(y_pred_median, y_test)) # std rmse dummy median
-    
-    dummy_mean_mean.extend(repeat(mean_mean_rmse, len(k_values))) # extend for straight line for dummy mean
-    dummy_mean_std.extend(repeat(mean_std_rmse, len(k_values))) # extend for straight line for dummy mean
-    
-    dummy_median_mean.extend(repeat(median_mean_rmse, len(k_values))) # extend for straight line for median
-    dummy_median_std.extend(repeat(median_std_rmse, len(k_values))) # extend for straight line for median
+        mean_mean_rmse = np.mean(metrics.mean_squared_error(y_pred_mean, y_test)) # mean rmse dummy mean
+        median_mean_rmse = np.mean(metrics.mean_squared_error(y_pred_median, y_test)) # mean rmse dummy median
+        
+        mean_std_rmse = np.std(metrics.mean_squared_error(y_pred_mean, y_test)) # std rmse dummy mean
+        median_std_rmse = np.std(metrics.mean_squared_error(y_pred_median, y_test)) # std rmse dummy median
+        
+        dummy_mean_mean.extend(repeat(mean_mean_rmse, len(k_values))) # extend for straight line for dummy mean
+        dummy_mean_std.extend(repeat(mean_std_rmse, len(k_values))) # extend for straight line for dummy mean
+        
+        dummy_median_mean.extend(repeat(median_mean_rmse, len(k_values))) # extend for straight line for median
+        dummy_median_std.extend(repeat(median_std_rmse, len(k_values))) # extend for straight line for median
     
 
     # ----------------------------------------------------------------------------#
     ############################ Plot and Compare #################################
     # ----------------------------------------------------------------------------#
+    if(co):
+        print('Starting plotting and comparing...')
+        plt.errorbar(k_values, dummy_mean_mean, yerr=dummy_mean_std, label='Dummy mean') # plot error bar for mean
+        plt.errorbar(k_values, dummy_median_mean, yerr=dummy_median_std, label='Dummy median') # plot error bar for median
+        plt.errorbar(k_values, lr_mean, yerr=lr_std, label='Linear Regression') # plot error bar for linear regression
+        plt.errorbar(k_values, knn_mean, yerr=knn_std, label='KNN classifier') # plot errorbar for knn
+        plt.legend() # plot legend
+        plt.xlabel('k values') # set x label
+        plt.ylabel('Mean square error') # set y label
+        plt.title('Comparison of Root Mean Squared Error (RMSE) \nfor different models vs different k values') # set title
+        plt.show() # show plot
+        print('Finished plotting and comparing...')
 
-    plt.errorbar(k_values, dummy_mean_mean, yerr=dummy_mean_std, label='Dummy mean') # plot error bar for mean
-    plt.errorbar(k_values, dummy_median_mean, yerr=dummy_median_std, label='Dummy median') # plot error bar for median
-    plt.errorbar(k_values, lr_mean, yerr=lr_std, label='Linear Regression') # plot error bar for linear regression
-    plt.errorbar(k_values, knn_mean, yerr=knn_std, label='KNN classifier') # plot errorbar for knn
-    plt.legend() # plot legend
-    plt.xlabel('k values') # set x label
-    plt.ylabel('Mean square error') # set y label
-    plt.title('Comparison of Root Mean Squared Error (RMSE) \nfor different models vs different k values') # set title
-    plt.show() # show plot
-
-    print('Finished linear and knn regression')
-
-def lasso_regression(): # CT, TK
-    print('Starting lasso regression...')
-    # Use cross validation to select hyperparameters
-    # Compare performance against baseline predictors
-    print('Finished lasso regression...')
-
-def ridge_regression(): # TK, CT
-    print('Starting ridge regression...')
-    # Use cross validation to select hyperparameters
-    # Compare performance against baseline predictors
-    print('Finished ridge regression...')
+    print('Finished methods...')
 
 if __name__ == '__main__':
     main()
