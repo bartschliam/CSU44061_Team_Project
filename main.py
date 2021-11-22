@@ -22,7 +22,13 @@ from itertools import repeat
 def main(): # TK, LB
     print('Program has started...')
     pre_processing() # pre process the data
-    methods(1, 0, 0, 1, 1, 1) # linear, lasso, ridge and knn regression, dummy and compare
+    linear = 0 # run linear regression boolean
+    lasso = 0 # run lasso regression boolean
+    ridge = 0 # run ridge regression boolean
+    knn = 0 # run knn regression boolean
+    dummy = 0 # run dummy regressions boolean
+    compare = 0 # run plot and compare boolean
+    methods(linear, lasso, ridge, knn, dummy, compare) # linear, lasso, ridge and knn regression, dummy and compare
     print('Program has finished...')
     return
 
