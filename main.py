@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 #from sklearn.linear_model import LogisticRegression
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import *
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.dummy import DummyRegressor
 #from sklearn.neighbors import KNeighborsClassifier
@@ -138,6 +138,7 @@ def methods(li, la, ri, kn, du, co): # LB
     X['Date & Time'] = X['Date & Time'].str[11:-3] # truncate date and time to only the hours
 
     k_values = list(range(1, 21)) # create a list from 1 to 20 for different k values
+    CVals = [0.0001, 0.001, 0.01, 0.1, 1] # A list of different CValues
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size = 0.2) # split data into training and test data
     temp = [] # init array for errors
     lr_mean = [] # mean error linear regression
@@ -148,6 +149,10 @@ def methods(li, la, ri, kn, du, co): # LB
     dummy_mean_std = [] # std error mean
     dummy_median_mean = [] # mean error median
     dummy_median_std = [] # mean std median
+    ri_std = [] # std error ridge
+    ri_means = [] # mean error ridge
+    la_means = [] # mean error lasso
+    la_std = [] # std error lasso
     kf = KFold(n_splits=5) # 5 splits for kfold
     lr_model = LinearRegression() # initialize linear regression model
     dummy_mean = DummyRegressor(strategy='mean') # dummy mean model
@@ -172,6 +177,18 @@ def methods(li, la, ri, kn, du, co): # LB
     # ----------------------------------------------------------------------------#
     if(la):
         print('Starting lasso regression...')
+        for c in CVals:
+            folds = KFold(n_splits = 5)
+            currentAlpha = 1/(2*c)
+            squaredError = []
+            lassoModel = Lasso(alpha = currentAlpha)
+        
+            for train, test in folds.split(X):  
+                lassoModel.fit(x_train.iloc[train], y_train.iloc[train])
+                yPredictor = lassoModel.predict(x_train.iloc[test])
+                squaredError.append(metrics.mean_squared_error(y_train.iloc[test], yPredictor))
+            la_means.append(np.mean(squaredError))
+            la_std.append(np.std(squaredError))
         # Use cross validation to select hyperparameters
         # Compare performance against baseline predictors
         print('Finished lasso regression...')
@@ -181,6 +198,15 @@ def methods(li, la, ri, kn, du, co): # LB
     # ----------------------------------------------------------------------------#
     if(ri):
         print('Starting ridge regression...')
+        for c in CVals:
+            currentAlpha = 1/(2*c)
+            ridgeModel = Ridge(alpha = currentAlpha)
+            for train, test in kf.split(x_train):  
+                ridgeModel.fit(x_train.iloc[train], y_train.iloc[train])
+                yPredictor = ridgeModel.predict(x_train.iloc[test])
+                temp.append(metrics.mean_squared_error(y_train.iloc[test], yPredictor))
+            ri_means.append(np.mean(temp))
+            ri_std.append(np.std(temp))
         # Use cross validation to select hyperparameters
         # Compare performance against baseline predictors
         print('Finished ridge regression...')
@@ -233,6 +259,8 @@ def methods(li, la, ri, kn, du, co): # LB
         plt.errorbar(k_values, dummy_mean_mean, yerr=dummy_mean_std, label='Dummy mean') # plot error bar for mean
         plt.errorbar(k_values, dummy_median_mean, yerr=dummy_median_std, label='Dummy median') # plot error bar for median
         plt.errorbar(k_values, lr_mean, yerr=lr_std, label='Linear Regression') # plot error bar for linear regression
+        plt.errorbar(k_values, ri_means, yerr= ri_std, label='Ridge Model') # plot error bar for ridge regression
+        plt.errorbar(k_values, la_means, yerr= la_means, label='Lasso Model') # plot error bar for lasso regression
         plt.errorbar(k_values, knn_mean, yerr=knn_std, label='KNN classifier') # plot errorbar for knn
         plt.legend() # plot legend
         plt.xlabel('k values') # set x label
