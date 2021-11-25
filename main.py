@@ -2,32 +2,27 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-#from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import *
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.dummy import DummyRegressor
-#from sklearn.neighbors import KNeighborsClassifier
-#from sklearn.metrics import confusion_matrix
-#from sklearn.metrics import roc_curve
 from sklearn.model_selection import cross_val_score, train_test_split
 import warnings
 warnings.filterwarnings('ignore')
 from sklearn import metrics
 from sklearn.model_selection import KFold
 from sklearn import neighbors
-#from sklearn.model_selection import cross_val_score
 from itertools import repeat
 
 # Main function starts here ->
 def main(): # TK, LB
     print('Program has started...')
     pre_processing() # pre process the data
-    linear = 0 # run linear regression boolean
-    lasso = 0 # run lasso regression boolean
-    ridge = 0 # run ridge regression boolean
-    knn = 0 # run knn regression boolean
-    dummy = 0 # run dummy regressions boolean
-    compare = 0 # run plot and compare boolean
+    linear = 1 # run linear regression boolean
+    lasso = 1 # run lasso regression boolean
+    ridge = 1 # run ridge regression boolean
+    knn = 1 # run knn regression boolean
+    dummy = 1 # run dummy regressions boolean
+    compare = 1 # run plot and compare boolean
     methods(linear, lasso, ridge, knn, dummy, compare) # linear, lasso, ridge and knn regression, dummy and compare
     print('Program has finished...')
     return
@@ -127,7 +122,7 @@ def pre_processing(): # LB
     result.to_csv('results.csv', index=False) # write dataframe to csv file 
     print('Finished preprocessing data...')
 
-def methods(li, la, ri, kn, du, co): # LB
+def methods(li, la, ri, kn, du, co): # CT, TK, LB
     print('Starting methods...')
     # ----------------------------------------------------------------------------#
     ############################ Initialization ###################################
@@ -138,23 +133,24 @@ def methods(li, la, ri, kn, du, co): # LB
     X['Date & Time'] = X['Date & Time'].str[11:-3] # truncate date and time to only the hours
 
     k_values = list(range(1, 21)) # create a list from 1 to 20 for different k values
-    CVals = [0.0001, 0.001, 0.01, 0.1, 1] # A list of different CValues
+    c_values = [0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000] # A list of different CValues
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size = 0.2) # split data into training and test data
-    temp = [] # init array for errors
-    lr_mean = [] # mean error linear regression
-    lr_std = [] # std error linear regression
+    la_mean = [] # mean error lasso
+    la_std = [] # std error lasso
+    ri_mean = [] # mean error ridge
+    ri_std = [] # std error ridge
     knn_mean = [] # mean error knn
     knn_std = [] # std error knn
     dummy_mean_mean = [] # mean error mean
     dummy_mean_std = [] # std error mean
     dummy_median_mean = [] # mean error median
     dummy_median_std = [] # mean std median
-    ri_std = [] # std error ridge
-    ri_means = [] # mean error ridge
-    la_means = [] # mean error lasso
-    la_std = [] # std error lasso
+    models = ['Linear Regression', 'Lasso Regression', 'Ridge Regression', 'KNN Regression', 'Mean Dummy', 'Median Dummy'] # set x labels for bar plot
+    final_compare_x = np.arange(len(models)) # evenly spaced intervals
+    final_compare_mean = [] # init mean values for final compare
+    final_compare_std = [] # init std values for final compare
     kf = KFold(n_splits=5) # 5 splits for kfold
-    lr_model = LinearRegression() # initialize linear regression model
+    li_model = LinearRegression() # initialize linear regression model
     dummy_mean = DummyRegressor(strategy='mean') # dummy mean model
     dummy_median = DummyRegressor(strategy='median') # dummy median model
 
@@ -163,13 +159,18 @@ def methods(li, la, ri, kn, du, co): # LB
     # ----------------------------------------------------------------------------#
     if(li):
         print('Starting linear regression...')
+        li_error = [] # linear regression error
         for train, test in kf.split(x_train): # perform 5-fold cross validation on training data
-            lr_model.fit(x_train.iloc[train], y_train.iloc[train]) # fit the training data
-            y_pred_lr = lr_model.predict(x_train.iloc[test]) # predict using test data
-            temp.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_lr)) # add error to temp array
-        lr_mean.extend(repeat(np.mean(temp), len(k_values))) # extend for straight line for linear regression
-        lr_std.extend(repeat(np.std(temp), len(k_values))) # extend for straight line for linear regression
-        coeff = pd.DataFrame(lr_model.coef_, X.columns, columns=['Coeff']) # save coefficients of each input feature
+            li_model.fit(x_train.iloc[train], y_train.iloc[train]) # fit the current's fold training data
+            y_pred_li = li_model.predict(x_train.iloc[test]) # predict using current's fold test data
+            li_error.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_li)) # add error to temp array
+        final_y_pred_li = li_model.predict(x_test) # predict on test data
+        li_rmse_error = metrics.mean_squared_error(y_test, final_y_pred_li) # get RMSE from the actual outputs
+        li_error.append(li_rmse_error) # add last prediction on test data to array of errors
+        final_compare_mean.append(np.mean(li_error)) # add mean to final mean
+        final_compare_std.append(np.std(li_error)) # add std to final std
+
+        print(pd.DataFrame(li_model.coef_, X.columns, columns=['Coeff'])) # save coefficients of each input feature
         print('Finished linear regression...')
     
     # ----------------------------------------------------------------------------#
@@ -177,20 +178,20 @@ def methods(li, la, ri, kn, du, co): # LB
     # ----------------------------------------------------------------------------#
     if(la):
         print('Starting lasso regression...')
-        for c in CVals:
-            folds = KFold(n_splits = 5)
+        for c in c_values:
             currentAlpha = 1/(2*c)
-            squaredError = []
-            lassoModel = Lasso(alpha = currentAlpha)
-        
-            for train, test in folds.split(X):  
-                lassoModel.fit(x_train.iloc[train], y_train.iloc[train])
-                yPredictor = lassoModel.predict(x_train.iloc[test])
-                squaredError.append(metrics.mean_squared_error(y_train.iloc[test], yPredictor))
-            la_means.append(np.mean(squaredError))
-            la_std.append(np.std(squaredError))
-        # Use cross validation to select hyperparameters
-        # Compare performance against baseline predictors
+            la_error = []
+            la_model = Lasso(alpha=currentAlpha)
+            for train, test in kf.split(x_train):  
+                la_model.fit(x_train.iloc[train], y_train.iloc[train])
+                y_pred_la = la_model.predict(x_train.iloc[test])
+                la_error.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_la))
+            la_mean.append(np.mean(la_error))
+            la_std.append(np.std(la_error))
+            if(c == 10):
+                final_compare_mean.append(np.mean(la_error))
+                final_compare_std.append(np.std(la_error))
+            #print('c=', c, ' mean error=', np.mean(la_error), ' std=', np.std(la_error))
         print('Finished lasso regression...')
 
     # ----------------------------------------------------------------------------#
@@ -198,17 +199,20 @@ def methods(li, la, ri, kn, du, co): # LB
     # ----------------------------------------------------------------------------#
     if(ri):
         print('Starting ridge regression...')
-        for c in CVals:
+        for c in c_values:
             currentAlpha = 1/(2*c)
-            ridgeModel = Ridge(alpha = currentAlpha)
+            ri_error = []
+            ri_model = Ridge(alpha=currentAlpha)
             for train, test in kf.split(x_train):  
-                ridgeModel.fit(x_train.iloc[train], y_train.iloc[train])
-                yPredictor = ridgeModel.predict(x_train.iloc[test])
-                temp.append(metrics.mean_squared_error(y_train.iloc[test], yPredictor))
-            ri_means.append(np.mean(temp))
-            ri_std.append(np.std(temp))
-        # Use cross validation to select hyperparameters
-        # Compare performance against baseline predictors
+                ri_model.fit(x_train.iloc[train], y_train.iloc[train])
+                y_pred_ri = ri_model.predict(x_train.iloc[test])
+                ri_error.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_ri))
+            ri_mean.append(np.mean(ri_error))
+            ri_std.append(np.std(ri_error))
+            if(c == 0.1):
+                final_compare_mean.append(np.mean(ri_error))
+                final_compare_std.append(np.std(ri_error))
+            #print('c=', c, ' mean error=', np.mean(ri_error), ' std=', np.std(ri_error))
         print('Finished ridge regression...')
 
 
@@ -218,55 +222,57 @@ def methods(li, la, ri, kn, du, co): # LB
     if(kn):
         print('Starting knn regression...')
         for k in k_values: # for each k value
-            temp = [] # temp array to store errors
+            kn_error = [] # kn_error array to store errors
             knn_model = neighbors.KNeighborsRegressor(n_neighbors=k) # init model
             for train, test in kf.split(x_train): # perform 5-fold cross validation on training data
                 knn_model.fit(x_train.iloc[train], y_train.iloc[train]) # fit model on training data
                 y_pred_knn = knn_model.predict(x_train.iloc[test]) # predict on test data
-                temp.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_knn)) # add error to temp array
-            knn_mean.append(np.mean(temp)) # add mean of estimates
-            knn_std.append(np.std(temp)) # add std of estimates
+                kn_error.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_knn)) # add error to kn_error array
+            knn_mean.append(np.mean(kn_error)) # add mean of estimates
+            knn_std.append(np.std(kn_error)) # add std of estimates
+            if(k == 10):
+                final_compare_mean.append(np.mean(kn_error))
+                final_compare_std.append(np.std(kn_error))
+            #print('k=', k, ' mean error=', np.mean(kn_error), ' std=', np.std(kn_error))
         print('Finished knn regression...')
 
     # ----------------------------------------------------------------------------#
     ############################ Dummy Regressors #################################
     # ----------------------------------------------------------------------------#
     if(du):
-        dummy_mean.fit(x_train, y_train) # fit model
-        dummy_median.fit(x_train, y_train) # fit model
-
+        dummy_mean.fit(x_train, y_train) # fit mean model
         y_pred_mean = dummy_mean.predict(x_test) # make prediction
+        final_compare_mean.append(np.mean(metrics.mean_squared_error(y_pred_mean, y_test))) # mean rmse dummy mean
+        final_compare_std.append(np.std(metrics.mean_squared_error(y_pred_mean, y_test))) # std rmse dummy mean
+
+        dummy_median.fit(x_train, y_train) # fit median model
         y_pred_median = dummy_median.predict(x_test) # make prediction
-
-        mean_mean_rmse = np.mean(metrics.mean_squared_error(y_pred_mean, y_test)) # mean rmse dummy mean
-        median_mean_rmse = np.mean(metrics.mean_squared_error(y_pred_median, y_test)) # mean rmse dummy median
-        
-        mean_std_rmse = np.std(metrics.mean_squared_error(y_pred_mean, y_test)) # std rmse dummy mean
-        median_std_rmse = np.std(metrics.mean_squared_error(y_pred_median, y_test)) # std rmse dummy median
-        
-        dummy_mean_mean.extend(repeat(mean_mean_rmse, len(k_values))) # extend for straight line for dummy mean
-        dummy_mean_std.extend(repeat(mean_std_rmse, len(k_values))) # extend for straight line for dummy mean
-        
-        dummy_median_mean.extend(repeat(median_mean_rmse, len(k_values))) # extend for straight line for median
-        dummy_median_std.extend(repeat(median_std_rmse, len(k_values))) # extend for straight line for median
-    
-
+        final_compare_mean.append(np.mean(metrics.mean_squared_error(y_pred_median, y_test))) # mean rmse dummy median
+        final_compare_std.append(np.std(metrics.mean_squared_error(y_pred_median, y_test))) # std rmse dummy median
     # ----------------------------------------------------------------------------#
     ############################ Plot and Compare #################################
     # ----------------------------------------------------------------------------#
     if(co):
         print('Starting plotting and comparing...')
-        plt.errorbar(k_values, dummy_mean_mean, yerr=dummy_mean_std, label='Dummy mean') # plot error bar for mean
-        plt.errorbar(k_values, dummy_median_mean, yerr=dummy_median_std, label='Dummy median') # plot error bar for median
-        plt.errorbar(k_values, lr_mean, yerr=lr_std, label='Linear Regression') # plot error bar for linear regression
-        plt.errorbar(k_values, ri_means, yerr= ri_std, label='Ridge Model') # plot error bar for ridge regression
-        plt.errorbar(k_values, la_means, yerr= la_means, label='Lasso Model') # plot error bar for lasso regression
-        plt.errorbar(k_values, knn_mean, yerr=knn_std, label='KNN classifier') # plot errorbar for knn
+        plt.errorbar(np.log10(c_values), la_mean, yerr= la_std, label='Lasso Model') # plot error bar for lasso regression
+        plt.errorbar(np.log10(c_values), ri_mean, yerr= ri_std, label='Ridge Model') # plot error bar for ridge regression
+        plt.xlim(-7.5, 7.5)
+        plt.xlabel('Log10(C) values')
+        plt.ylabel('Root mean squared error')
+        plt.title('Log10(C) vs Root mean squared error \nfor Lasso and Ridge regression')
+        plt.legend()
+        plt.show()
+
+        plt.errorbar(k_values, knn_mean, yerr=knn_std, label='KNN regression') # plot errorbar for knn
         plt.legend() # plot legend
         plt.xlabel('k values') # set x label
-        plt.ylabel('Mean square error') # set y label
-        plt.title('Comparison of Root Mean Squared Error (RMSE) \nfor different models vs different k values') # set title
+        plt.ylabel('Root mean square error') # set y label
+        plt.title('Root Mean Squared Error (RMSE) \nfor KNN Regression vs different k values') # set title
         plt.show() # show plot
+
+        
+
+
         print('Finished plotting and comparing...')
 
     print('Finished methods...')
