@@ -270,7 +270,17 @@ def methods(li, la, ri, kn, du, co): # CT, TK, LB
         plt.title('Root Mean Squared Error (RMSE) \nfor KNN Regression vs different k values') # set title
         plt.show() # show plot
 
-        
+        fig, ax = plt.subplots()
+        ax.bar(final_compare_x, final_compare_mean, yerr=final_compare_std, align='center', alpha=0.5, ecolor='black', capsize=10)
+        ax.set_ylabel('Root squared mean error')
+        ax.set_xticks(final_compare_x)
+        ax.set_xticklabels(models)
+        ax.set_title('Root squared mean error comparison of different regression models')
+        ax.yaxis.grid(True)
+
+        # Save the figure and show
+        plt.tight_layout()
+        plt.show()
 
 
         print('Finished plotting and comparing...')
