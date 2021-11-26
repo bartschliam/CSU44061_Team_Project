@@ -145,7 +145,7 @@ def methods(li, la, ri, kn, du, co): # CT, TK, LB
     dummy_mean_std = [] # std error mean
     dummy_median_mean = [] # mean error median
     dummy_median_std = [] # mean std median
-    models = ['Linear Regression', 'Lasso Regression', 'Ridge Regression', 'KNN Regression', 'Mean Dummy', 'Median Dummy'] # set x labels for bar plot
+    models = ['Linear\nRegression', 'Lasso\nRegression', 'Ridge\nRegression', 'KNN\nRegression', 'Mean\nDummy', 'Median\nDummy'] # set x labels for bar plot
     final_compare_x = np.arange(len(models)) # evenly spaced intervals
     final_compare_mean = [] # init mean values for final compare
     final_compare_std = [] # init std values for final compare
@@ -277,9 +277,6 @@ def methods(li, la, ri, kn, du, co): # CT, TK, LB
         ax.set_xticklabels(models)
         ax.set_title('Root squared mean error comparison of different regression models')
         ax.yaxis.grid(True)
-
-        # Save the figure and show
-        plt.tight_layout()
         plt.show()
 
 
