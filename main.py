@@ -122,7 +122,7 @@ def pre_processing(): # LB
     result.to_csv('results.csv', index=False) # write dataframe to csv file 
     print('Finished preprocessing data...')
 
-def methods(li, la, ri, kn, du, co): # CT, TK, LB
+def methods(li, la, ri, kn, du, co): # CT, TK
     print('Starting methods...')
     # ----------------------------------------------------------------------------#
     ############################ Initialization ###################################
@@ -157,13 +157,14 @@ def methods(li, la, ri, kn, du, co): # CT, TK, LB
     # ----------------------------------------------------------------------------#
     ############################ Linear Regression ################################
     # ----------------------------------------------------------------------------#
-    if(li):
+    if(li): # if boolean for linear regression is set
         print('Starting linear regression...')
         li_error = [] # linear regression error
         for train, test in kf.split(x_train): # perform 5-fold cross validation on training data
             li_model.fit(x_train.iloc[train], y_train.iloc[train]) # fit the current's fold training data
             y_pred_li = li_model.predict(x_train.iloc[test]) # predict using current's fold test data
             li_error.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_li)) # add error to temp array
+        li_model.fit(x_train, y_train) # fit the model on training data
         final_y_pred_li = li_model.predict(x_test) # predict on test data
         li_rmse_error = metrics.mean_squared_error(y_test, final_y_pred_li) # get RMSE from the actual outputs
         li_error.append(li_rmse_error) # add last prediction on test data to array of errors
@@ -176,50 +177,48 @@ def methods(li, la, ri, kn, du, co): # CT, TK, LB
     # ----------------------------------------------------------------------------#
     ############################ Lasso Regression ################################
     # ----------------------------------------------------------------------------#
-    if(la):
+    if(la): # if boolean for lasso regression is set
         print('Starting lasso regression...')
-        for c in c_values:
-            currentAlpha = 1/(2*c)
-            la_error = []
-            la_model = Lasso(alpha=currentAlpha)
-            for train, test in kf.split(x_train):  
-                la_model.fit(x_train.iloc[train], y_train.iloc[train])
-                y_pred_la = la_model.predict(x_train.iloc[test])
-                la_error.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_la))
-            la_mean.append(np.mean(la_error))
-            la_std.append(np.std(la_error))
-            if(c == 10):
-                final_compare_mean.append(np.mean(la_error))
-                final_compare_std.append(np.std(la_error))
-            #print('c=', c, ' mean error=', np.mean(la_error), ' std=', np.std(la_error))
+        for c in c_values: # cross validation to select hyper parameter c
+            currentAlpha = 1/(2*c) # alpha value for current model using current c value
+            la_error = [] # lasso error
+            la_model = Lasso(alpha=currentAlpha) # lasso model
+            for train, test in kf.split(x_train): # use 5 fold cross validation on training data
+                la_model.fit(x_train.iloc[train], y_train.iloc[train]) # fit the model on training fold
+                y_pred_la = la_model.predict(x_train.iloc[test]) # predict on test fold
+                la_error.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_la)) # compare prediction and report error
+            la_mean.append(np.mean(la_error)) # add mean of errors
+            la_std.append(np.std(la_error)) # add std of errors
+            if(c == 10): # select c value with best results
+                final_compare_mean.append(np.mean(la_error)) # add to final mean comparison
+                final_compare_std.append(np.std(la_error)) # add to final  std comparison
         print('Finished lasso regression...')
 
     # ----------------------------------------------------------------------------#
     ############################ Ridge Regression ################################
     # ----------------------------------------------------------------------------#
-    if(ri):
+    if(ri): # if ridge boolean is set
         print('Starting ridge regression...')
-        for c in c_values:
-            currentAlpha = 1/(2*c)
-            ri_error = []
-            ri_model = Ridge(alpha=currentAlpha)
-            for train, test in kf.split(x_train):  
-                ri_model.fit(x_train.iloc[train], y_train.iloc[train])
-                y_pred_ri = ri_model.predict(x_train.iloc[test])
-                ri_error.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_ri))
-            ri_mean.append(np.mean(ri_error))
-            ri_std.append(np.std(ri_error))
-            if(c == 0.1):
-                final_compare_mean.append(np.mean(ri_error))
-                final_compare_std.append(np.std(ri_error))
-            #print('c=', c, ' mean error=', np.mean(ri_error), ' std=', np.std(ri_error))
+        for c in c_values: # cross validation to select hyper parameter c
+            currentAlpha = 1/(2*c) # alpha value for current model using current c value
+            ri_error = [] # ridge error
+            ri_model = Ridge(alpha=currentAlpha) # ridge model
+            for train, test in kf.split(x_train): # use 5 fold cross validation on training data
+                ri_model.fit(x_train.iloc[train], y_train.iloc[train]) # fit the model on training fold
+                y_pred_ri = ri_model.predict(x_train.iloc[test]) # predict on test fold
+                ri_error.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_ri)) # compare prediction and report error
+            ri_mean.append(np.mean(ri_error)) # add mean of errors
+            ri_std.append(np.std(ri_error)) # add std of errors
+            if(c == 0.1): # select c value with best results
+                final_compare_mean.append(np.mean(ri_error)) # add to final mean comparison
+                final_compare_std.append(np.std(ri_error)) # add to final std comparison
         print('Finished ridge regression...')
 
 
     # ----------------------------------------------------------------------------#
     ############################ KNN Regression ###################################
     # ----------------------------------------------------------------------------#    
-    if(kn):
+    if(kn): # if knn boolean is set
         print('Starting knn regression...')
         for k in k_values: # for each k value
             kn_error = [] # kn_error array to store errors
@@ -230,16 +229,15 @@ def methods(li, la, ri, kn, du, co): # CT, TK, LB
                 kn_error.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_knn)) # add error to kn_error array
             knn_mean.append(np.mean(kn_error)) # add mean of estimates
             knn_std.append(np.std(kn_error)) # add std of estimates
-            if(k == 10):
-                final_compare_mean.append(np.mean(kn_error))
-                final_compare_std.append(np.std(kn_error))
-            #print('k=', k, ' mean error=', np.mean(kn_error), ' std=', np.std(kn_error))
+            if(k == 10): # select best k value
+                final_compare_mean.append(np.mean(kn_error)) # add error to final mean comparison
+                final_compare_std.append(np.std(kn_error)) # add error to final std comparison
         print('Finished knn regression...')
 
     # ----------------------------------------------------------------------------#
     ############################ Dummy Regressors #################################
     # ----------------------------------------------------------------------------#
-    if(du):
+    if(du): # if dummy boolean is set
         dummy_mean.fit(x_train, y_train) # fit mean model
         y_pred_mean = dummy_mean.predict(x_test) # make prediction
         final_compare_mean.append(np.mean(metrics.mean_squared_error(y_pred_mean, y_test))) # mean rmse dummy mean
@@ -252,16 +250,71 @@ def methods(li, la, ri, kn, du, co): # CT, TK, LB
     # ----------------------------------------------------------------------------#
     ############################ Plot and Compare #################################
     # ----------------------------------------------------------------------------#
-    if(co):
+    if(co): # if compare boolean is set
         print('Starting plotting and comparing...')
+
+        plt.scatter(X['Date & Time'], y, s=1) # plot time against cycle count
+        plt.xlabel('Hour of the day') # set x axis
+        plt.ylabel('Cycle count') # set y axis
+        plt.title('Cycle count vs Hour of the day') # set title
+        plt.show() # show plot
+
+        plt.scatter(X['Rain'], y, s=1) # plot rain against cycle count
+        plt.xlabel('Rain amount') # set x axis
+        plt.ylabel('Cycle count') # set y axis
+        plt.title('Cycle count vs Rain amount') # set title
+        plt.show() # show plot
+
+        plt.scatter(X['Temperature'], y, s=1) # plot temperature against cycle count
+        plt.xlabel('Temperature') # set x axis
+        plt.ylabel('Cycle count') # set y axis
+        plt.title('Cycle count vs Temperature') # set title
+        plt.show() # show plot
+
+        plt.scatter(X['Humidity'], y, s=1) # plot humidity against cycle count
+        plt.xlabel('Humidity') # set x axis
+        plt.ylabel('Cycle count') # set y axis
+        plt.title('Cycle count vs Humidity') # set title
+        plt.show() # show plot
+
+        plt.scatter(X['Wind Speed'], y, s=1) # plot wind speed against cycle count
+        plt.xlabel('Wind speed') # set x axis
+        plt.ylabel('Cycle count') # set y axis
+        plt.title('Cycle count vs Wind speed') # set title
+        plt.show() # show plot
+
+        plt.scatter(X['Wind Direction'], y, s=1) # plot wind direction against cycle count
+        plt.xlabel('Wind direction') # set x axis
+        plt.ylabel('Cycle count') # set y axis
+        plt.title('Cycle count vs Wind direction') # set title
+        plt.show() # show plot
+
+        plt.scatter(X['Sun Duration'], y, s=1) # plot sun duration against cycle count
+        plt.xlabel('Sun Duration') # set x axis
+        plt.ylabel('Cycle count') # set y axis
+        plt.title('Cycle count vs Sun Duration') # set title
+        plt.show() # show plot
+
+        plt.scatter(X['Visibility'], y, s=1) # plot visibility against cycle count
+        plt.xlabel('Visibility') # set x axis
+        plt.ylabel('Cycle Count') # set y axis
+        plt.title('Cycle count vs Visibility') # set title
+        plt.show() # show plot
+
+        plt.scatter(X['Cloud Amount'], y, s=1) # plot cloud amount against cycle count
+        plt.xlabel('Cloud Amount') # set x axis
+        plt.ylabel('Cycle count') # set y axis
+        plt.title('Cycle count vs Cloud Amount') # set title
+        plt.show() # show plot
+
         plt.errorbar(np.log10(c_values), la_mean, yerr= la_std, label='Lasso Model') # plot error bar for lasso regression
         plt.errorbar(np.log10(c_values), ri_mean, yerr= ri_std, label='Ridge Model') # plot error bar for ridge regression
-        plt.xlim(-7.5, 7.5)
-        plt.xlabel('Log10(C) values')
-        plt.ylabel('Root mean squared error')
-        plt.title('Log10(C) vs Root mean squared error \nfor Lasso and Ridge regression')
-        plt.legend()
-        plt.show()
+        plt.xlim(-7.5, 7.5) # limit x values for better viewing of plot
+        plt.xlabel('Log10(C) values') # set x axis
+        plt.ylabel('Root mean squared error') # set y axis
+        plt.title('Log10(C) vs Root mean squared error \nfor Lasso and Ridge regression') # title
+        plt.legend() # show legend
+        plt.show() # show plot
 
         plt.errorbar(k_values, knn_mean, yerr=knn_std, label='KNN regression') # plot errorbar for knn
         plt.legend() # plot legend
@@ -270,16 +323,14 @@ def methods(li, la, ri, kn, du, co): # CT, TK, LB
         plt.title('Root Mean Squared Error (RMSE) \nfor KNN Regression vs different k values') # set title
         plt.show() # show plot
 
-        fig, ax = plt.subplots()
-        ax.bar(final_compare_x, final_compare_mean, yerr=final_compare_std, align='center', alpha=0.5, ecolor='black', capsize=10)
-        ax.set_ylabel('Root squared mean error')
-        ax.set_xticks(final_compare_x)
-        ax.set_xticklabels(models)
-        ax.set_title('Root squared mean error comparison of different regression models')
-        ax.yaxis.grid(True)
-        plt.show()
-
-
+        fig, ax = plt.subplots() # create a subplot
+        ax.bar(final_compare_x, final_compare_mean, yerr=final_compare_std, align='center', alpha=0.5, ecolor='black', capsize=10) # create bar plot
+        ax.set_ylabel('Root squared mean error') # set y axis
+        ax.set_xticks(final_compare_x) # set x axis
+        ax.set_xticklabels(models) # set x axis labels
+        ax.set_title('Root squared mean error comparison of different regression models') # set title
+        ax.yaxis.grid(True) # show grid
+        plt.show() # show plot
         print('Finished plotting and comparing...')
 
     print('Finished methods...')
