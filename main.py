@@ -144,10 +144,7 @@ def methods(li, la, ri, kn, du, co): # CT, TK
     ri_std = [] # std error ridge
     knn_mean = [] # mean error knn
     knn_std = [] # std error knn
-    # dummy_mean_mean = [] # mean error mean
-    # dummy_mean_std = [] # std error mean
-    # dummy_median_mean = [] # mean error median
-    # dummy_median_std = [] # mean std median
+    
     models = ['Linear\nRegression', 'Lasso\nRegression', 'Ridge\nRegression', 'KNN\nRegression', 'Mean\nDummy', 'Median\nDummy'] # set x labels for bar plot
     final_compare_x = np.arange(len(models)) # evenly spaced intervals
     final_compare_mean = [] # init mean values for final compare
@@ -185,7 +182,7 @@ def methods(li, la, ri, kn, du, co): # CT, TK
         print('Starting lasso regression...')
         for c in c_values: # cross validation to select hyper parameter c
             la_error = [] # lasso error
-            
+
             currentAlpha = 1/(2*c) # alpha value for current model using current c value
             la_model = Lasso(alpha=currentAlpha) # lasso model
             for train, test in kf.split(x_train): # use 5 fold cross validation on training data
