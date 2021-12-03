@@ -17,14 +17,14 @@ from itertools import repeat
 def main(): # TK, LB
     print('Program has started...')
     pre_processing() # pre process the data
-    linear = 1 # run linear regression boolean
-    lasso = 1 # run lasso regression boolean
-    ridge = 1 # run ridge regression boolean
-    knn = 1 # run knn regression boolean
-    dummy = 1 # run dummy regressions boolean
-    compare = 1 # run plot and compare boolean
+    linear = True # run linear regression boolean
+    lasso = True # run lasso regression boolean
+    ridge = True # run ridge regression boolean
+    knn = True # run knn regression boolean
+    dummy = True # run dummy regressions boolean
+    compare = True # run plot and compare boolean
     methods(linear, lasso, ridge, knn, dummy, compare) # linear, lasso, ridge and knn regression, dummy and compare
-    print('Program has finished...')
+    print('...Program has finished')
     return
 
 # Preprocessing function starts here
@@ -123,17 +123,20 @@ def pre_processing(): # LB
     print('Finished preprocessing data...')
 
 def methods(li, la, ri, kn, du, co): # CT, TK
-    print('Starting methods...')
+    print('STARTING SELECTED METHODS')
+    
+    
     # ----------------------------------------------------------------------------#
-    ############################ Initialization ###################################
+    ############################ Initialization and SET-UP ###################################
     # ----------------------------------------------------------------------------#
     result = pd.read_csv('results.csv') # read preprocessed data
     y = result.iloc[:,9] # read the count (output)
     X = result.iloc[:,0:9] # read in all the other columns (inputs)
     X['Date & Time'] = X['Date & Time'].str[11:-3] # truncate date and time to only the hours
 
-    k_values = list(range(1, 21)) # create a list from 1 to 20 for different k values
+    
     c_values = [0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000] # A list of different CValues
+    k_values = list(range(1, 21)) # create a list from 1 to 20 for different k values
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size = 0.2) # split data into training and test data
     la_mean = [] # mean error lasso
     la_std = [] # std error lasso
@@ -141,10 +144,10 @@ def methods(li, la, ri, kn, du, co): # CT, TK
     ri_std = [] # std error ridge
     knn_mean = [] # mean error knn
     knn_std = [] # std error knn
-    dummy_mean_mean = [] # mean error mean
-    dummy_mean_std = [] # std error mean
-    dummy_median_mean = [] # mean error median
-    dummy_median_std = [] # mean std median
+    # dummy_mean_mean = [] # mean error mean
+    # dummy_mean_std = [] # std error mean
+    # dummy_median_mean = [] # mean error median
+    # dummy_median_std = [] # mean std median
     models = ['Linear\nRegression', 'Lasso\nRegression', 'Ridge\nRegression', 'KNN\nRegression', 'Mean\nDummy', 'Median\nDummy'] # set x labels for bar plot
     final_compare_x = np.arange(len(models)) # evenly spaced intervals
     final_compare_mean = [] # init mean values for final compare
@@ -157,7 +160,7 @@ def methods(li, la, ri, kn, du, co): # CT, TK
     # ----------------------------------------------------------------------------#
     ############################ Linear Regression ################################
     # ----------------------------------------------------------------------------#
-    if(li): # if boolean for linear regression is set
+    if(li is True): # if boolean for linear regression is set
         print('Starting linear regression...')
         li_error = [] # linear regression error
         for train, test in kf.split(x_train): # perform 5-fold cross validation on training data
@@ -171,17 +174,19 @@ def methods(li, la, ri, kn, du, co): # CT, TK
         final_compare_mean.append(np.mean(li_error)) # add mean to final mean
         final_compare_std.append(np.std(li_error)) # add std to final std
 
+        print("Coefficients for the input features: ")
         print(pd.DataFrame(li_model.coef_, X.columns, columns=['Coeff'])) # save coefficients of each input feature
-        print('Finished linear regression...')
+        print('...Finished linear regression')
     
     # ----------------------------------------------------------------------------#
     ############################ Lasso Regression ################################
     # ----------------------------------------------------------------------------#
-    if(la): # if boolean for lasso regression is set
+    if(la is True): # if boolean for lasso regression is set
         print('Starting lasso regression...')
         for c in c_values: # cross validation to select hyper parameter c
-            currentAlpha = 1/(2*c) # alpha value for current model using current c value
             la_error = [] # lasso error
+            
+            currentAlpha = 1/(2*c) # alpha value for current model using current c value
             la_model = Lasso(alpha=currentAlpha) # lasso model
             for train, test in kf.split(x_train): # use 5 fold cross validation on training data
                 la_model.fit(x_train.iloc[train], y_train.iloc[train]) # fit the model on training fold
@@ -189,19 +194,24 @@ def methods(li, la, ri, kn, du, co): # CT, TK
                 la_error.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_la)) # compare prediction and report error
             la_mean.append(np.mean(la_error)) # add mean of errors
             la_std.append(np.std(la_error)) # add std of errors
-            if(c == 10): # select c value with best results
+            
+
+            # Choosing the best value of C for comparing the Lasso Model with other models
+            best_C_val_lasso = 10   #Selected the best value of C
+            if(c == best_C_val_lasso): # select c value with best results
                 final_compare_mean.append(np.mean(la_error)) # add to final mean comparison
                 final_compare_std.append(np.std(la_error)) # add to final  std comparison
-        print('Finished lasso regression...')
+        print('...Finished lasso regression')
 
     # ----------------------------------------------------------------------------#
     ############################ Ridge Regression ################################
     # ----------------------------------------------------------------------------#
-    if(ri): # if ridge boolean is set
+    if(ri is True): # if ridge boolean is set
         print('Starting ridge regression...')
         for c in c_values: # cross validation to select hyper parameter c
-            currentAlpha = 1/(2*c) # alpha value for current model using current c value
             ri_error = [] # ridge error
+            
+            currentAlpha = 1/(2*c) # alpha value for current model using current c value
             ri_model = Ridge(alpha=currentAlpha) # ridge model
             for train, test in kf.split(x_train): # use 5 fold cross validation on training data
                 ri_model.fit(x_train.iloc[train], y_train.iloc[train]) # fit the model on training fold
@@ -209,16 +219,20 @@ def methods(li, la, ri, kn, du, co): # CT, TK
                 ri_error.append(metrics.mean_squared_error(y_train.iloc[test], y_pred_ri)) # compare prediction and report error
             ri_mean.append(np.mean(ri_error)) # add mean of errors
             ri_std.append(np.std(ri_error)) # add std of errors
-            if(c == 0.1): # select c value with best results
+            
+
+            # Choosing the best value of C for comparing the Ridge Model with other models
+            best_C_val_ridge = 0.1  #Selected the best value of C for Ridge Regression
+            if(c == best_C_val_ridge): # select c value with best results
                 final_compare_mean.append(np.mean(ri_error)) # add to final mean comparison
                 final_compare_std.append(np.std(ri_error)) # add to final std comparison
-        print('Finished ridge regression...')
+        print('...Finished ridge regression')
 
 
     # ----------------------------------------------------------------------------#
     ############################ KNN Regression ###################################
     # ----------------------------------------------------------------------------#    
-    if(kn): # if knn boolean is set
+    if(kn is True): # if knn boolean is set
         print('Starting knn regression...')
         for k in k_values: # for each k value
             kn_error = [] # kn_error array to store errors
@@ -232,12 +246,12 @@ def methods(li, la, ri, kn, du, co): # CT, TK
             if(k == 10): # select best k value
                 final_compare_mean.append(np.mean(kn_error)) # add error to final mean comparison
                 final_compare_std.append(np.std(kn_error)) # add error to final std comparison
-        print('Finished knn regression...')
+        print('...Finished knn regression')
 
     # ----------------------------------------------------------------------------#
     ############################ Dummy Regressors #################################
     # ----------------------------------------------------------------------------#
-    if(du): # if dummy boolean is set
+    if(du is True): # if dummy boolean is set
         dummy_mean.fit(x_train, y_train) # fit mean model
         y_pred_mean = dummy_mean.predict(x_test) # make prediction
         final_compare_mean.append(np.mean(metrics.mean_squared_error(y_pred_mean, y_test))) # mean rmse dummy mean
@@ -250,7 +264,7 @@ def methods(li, la, ri, kn, du, co): # CT, TK
     # ----------------------------------------------------------------------------#
     ############################ Plot and Compare #################################
     # ----------------------------------------------------------------------------#
-    if(co): # if compare boolean is set
+    if(co is True): # if compare boolean is set
         print('Starting plotting and comparing...')
 
         plt.scatter(X['Date & Time'], y, s=1) # plot time against cycle count
@@ -333,7 +347,7 @@ def methods(li, la, ri, kn, du, co): # CT, TK
         plt.show() # show plot
         print('Finished plotting and comparing...')
 
-    print('Finished methods...')
+    print('...Finished methods')
 
 if __name__ == '__main__':
     main()
